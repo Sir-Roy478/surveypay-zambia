@@ -254,13 +254,13 @@
   <div class="pay-modal-inner">
     <div class="pay-icon">📱</div>
     <div class="pay-title">Unlock This Survey</div>
-    <p class="pay-sub">Send the amount below via MTN Mobile Money to unlock this survey.</p>
+    <p class="pay-sub">Send the amount below to the mobile money number listed — from MTN, Airtel, or Zamtel.</p>
     <div class="pay-amount" id="payAmount">K50</div>
     <p class="pay-earn" id="payEarn"></p>
 
     <div class="momo-box">
       <div class="momo-row">
-        <span class="momo-label">Send to MTN Number</span>
+        <span class="momo-label">Send Money To</span>
         <span class="momo-value" id="momoNumber">096XXXXXXX</span>
       </div>
       <div class="momo-row">
@@ -270,10 +270,10 @@
       <button class="copy-momo-btn" onclick="copyMomoNumber()">📋 Copy Number</button>
     </div>
 
-    <p class="pay-instructions">After sending, enter the <strong>MTN transaction reference</strong> and your phone number below, then tap Confirm. Your survey will unlock once we verify the payment (usually within a few minutes).</p>
+    <p class="pay-instructions">After sending, enter the <strong>transaction reference</strong> from your mobile money confirmation message, plus the phone number you sent from. Tap Confirm. Your survey will unlock once we verify the payment (usually within a few minutes).</p>
 
-    <input type="text" class="pay-input" id="momoRef" placeholder="MTN transaction reference e.g. MP240613.1234"/>
-    <input type="tel" class="pay-input" id="payPhone" placeholder="Your MTN number e.g. 0961234567"/>
+    <input type="text" class="pay-input" id="momoRef" placeholder="Transaction reference e.g. MP240613.1234"/>
+    <input type="tel" class="pay-input" id="payPhone" placeholder="The number you sent money from"/>
     <button class="stk-btn" id="stkBtn" onclick="submitMomoPayment()">✅ I've Sent the Money – Confirm</button>
     <button class="pay-cancel" onclick="closePayModal()">Cancel</button>
     <div class="pay-status" id="payStatus"></div>
@@ -352,7 +352,7 @@
         <option value="airtel">💛 Airtel Money</option>
         <option value="bank">🏦 Bank Transfer</option>
       </select>
-      <input type="text" class="form-input" id="withdrawPhone" placeholder="MTN Mobile Money number or bank details"/>
+      <input type="text" class="form-input" id="withdrawPhone" placeholder="Mobile money number or bank details"/>
       <button class="action-btn" id="withdrawBtn" onclick="handleWithdraw()">Request Withdrawal</button>
     </div>
   </div>
@@ -649,8 +649,8 @@
     var phone=document.getElementById('payPhone').value.trim();
     var ref=document.getElementById('momoRef').value.trim();
     var s=getSurveyById(pendingSurveyId);
-    if(!phone||phone.length<9){showToast('⚠️ Enter a valid MTN number');return;}
-    if(!ref){showToast('⚠️ Enter the MTN transaction reference');return;}
+    if(!phone||phone.length<9){showToast('⚠️ Enter a valid phone number');return;}
+    if(!ref){showToast('⚠️ Enter the transaction reference');return;}
 
     var btn=document.getElementById('stkBtn');
     btn.disabled=true;btn.textContent='Submitting…';
