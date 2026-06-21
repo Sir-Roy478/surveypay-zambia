@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SurveyPay Zambia – Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--primary:#ff7a20;--primary-dark:#e05500;--dark:#1a0a2e;--card:#231545;--border:rgba(180,120,255,0.2);--border-focus:rgba(160,80,255,0.48);--text:#f0e8ff;--muted:#c4a8ff;--white:#ffffff;--error:#ff5252;}
+    body{font-family:'DM Sans',sans-serif;background:#1a0a2e;color:#f0e8ff;min-height:100vh;display:flex;flex-direction:column;}
+    nav{display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;border-bottom:1px solid var(--border);}
+    .nav-logo{font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:800;color:#ffffff;text-decoration:none;}
+    .nav-logo span{color:var(--primary);}
+    .nav-link{color:#c4a8ff;text-decoration:none;font-size:.9rem;}
+    .nav-link:hover{color:var(--primary);}
+    .page{flex:1;display:flex;align-items:center;justify-content:center;padding:3rem 1rem;background:radial-gradient(ellipse at top,rgba(0,119,255,0.06) 0%,transparent 60%);}
+    .card{background:#231545;border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:420px;}
+    .card-title{font-family:'Sora',sans-serif;font-size:1.7rem;font-weight:800;color:#ffffff;margin-bottom:.4rem;}
+    .card-sub{color:#c4a8ff;font-size:.9rem;margin-bottom:2rem;}
+    .card-sub a{color:var(--primary);text-decoration:none;font-weight:600;}
+    .form-group{margin-bottom:1.2rem;}
+    label{display:block;font-size:.85rem;font-weight:600;color:#c4a8ff;margin-bottom:.4rem;}
+    input{width:100%;padding:.8rem 1rem;border-radius:10px;background:rgba(180,120,255,0.10);border:1px solid var(--border);color:#f0e8ff;font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+    input:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(160,80,255,0.12);}
+    input::placeholder{color:rgba(255,255,255,0.2);}
+    .input-error{border-color:var(--error)!important;}
+    .error-msg{color:var(--error);font-size:.78rem;margin-top:.3rem;display:none;}
+    .error-msg.show{display:block;}
+    .input-wrap{position:relative;}
+    .toggle-pw{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#c4a8ff;cursor:pointer;font-size:.85rem;}
+    .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+    .remember{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#c4a8ff;cursor:pointer;}
+    .remember input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;padding:0;}
+    .forgot{color:var(--primary);font-size:.85rem;text-decoration:none;}
+    .submit-btn{width:100%;padding:.9rem;border-radius:50px;background:var(--primary);color:#000;font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;border:none;cursor:pointer;transition:background .2s,transform .15s;box-shadow:0 0 20px rgba(160,80,255,0.3);}
+    .submit-btn:hover{background:var(--primary-dark);transform:translateY(-1px);}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .alert-box{background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.25);color:#ff5252;border-radius:10px;padding:.8rem 1rem;font-size:.88rem;margin-bottom:1rem;display:none;}
+    .alert-box.show{display:block;}
+    .signup-prompt{margin-top:1.5rem;text-align:center;font-size:.88rem;color:#c4a8ff;padding-top:1.5rem;border-top:1px solid var(--border);}
+    .signup-prompt a{color:var(--primary);text-decoration:none;font-weight:600;}
+    footer{padding:1.5rem 5%;text-align:center;color:#c4a8ff;font-size:.82rem;border-top:1px solid var(--border);}
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="index.html">Survey<span>Pay</span></a>
+  <a class="nav-link" href="signup.html">Create account →</a>
+</nav>
+<div class="page">
+  <div class="card">
+    <div class="card-title">Welcome back</div>
+    <p class="card-sub">Don't have an account? <a href="signup.html">Sign up free</a></p>
+    <div class="alert-box" id="alertBox"></div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="you@example.com"/>
+      <div class="error-msg" id="err-email">Please enter a valid email address.</div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="password" placeholder="Your password"/>
+        <button class="toggle-pw" onclick="togglePw()" type="button">Show</button>
+      </div>
+      <div class="error-msg" id="err-pw">Please enter your password.</div>
+    </div>
+    <div class="row">
+      <label class="remember"><input type="checkbox" id="remember"/> Remember me</label>
+      <a href="reset.html" class="forgot">Forgot password?</a>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="handleLogin()">Sign in</button>
+    <div class="signup-prompt">
+      New here? <a href="signup.html">Create a free account</a> and get <strong style="color:var(--primary)">K100</strong> instantly.
+    </div>
+  </div>
+</div>
+<footer>© 2026 SurveyPay Zambia. All rights reserved.</footer>
+
+<script>
+  function togglePw() {
+    var el  = document.getElementById('password');
+    var btn = document.querySelector('.toggle-pw');
+    el.type = el.type === 'password' ? 'text' : 'password';
+    btn.textContent = el.type === 'password' ? 'Show' : 'Hide';
+  }
+
+  function handleLogin() {
+    var email    = document.getElementById('email').value.trim();
+    var pw       = document.getElementById('password').value;
+    var remember = document.getElementById('remember').checked;
+
+    document.getElementById('err-email').classList.remove('show');
+    document.getElementById('err-pw').classList.remove('show');
+    document.getElementById('email').classList.remove('input-error');
+    document.getElementById('password').classList.remove('input-error');
+    document.getElementById('alertBox').classList.remove('show');
+
+    var valid = true;
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      document.getElementById('err-email').classList.add('show');
+      document.getElementById('email').classList.add('input-error');
+      valid = false;
+    }
+    if (!pw) {
+      document.getElementById('err-pw').classList.add('show');
+      document.getElementById('password').classList.add('input-error');
+      valid = false;
+    }
+    if (!valid) return;
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    var persistence = remember
+      ? firebase.auth.Auth.Persistence.LOCAL
+      : firebase.auth.Auth.Persistence.SESSION;
+
+    auth.setPersistence(persistence)
+      .then(function() {
+        return auth.signInWithEmailAndPassword(email, pw);
+      })
+      .then(function(cred) {
+        return db.collection('users').doc(cred.user.uid).update({
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      })
+      .then(function() {
+        window.location.href = 'dashboard.html';
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+        var alertBox = document.getElementById('alertBox');
+        var badCreds = ['auth/user-not-found','auth/wrong-password','auth/invalid-credential'];
+        alertBox.textContent = badCreds.includes(err.code)
+          ? 'Invalid email or password. Please try again.'
+          : (err.message || 'Something went wrong. Please try again.');
+        alertBox.classList.add('show');
+      });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SurveyPay Zambia – Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --primary:#ff7a20;
+      --primary-dark:#e05500;
+      --bg:#1a0a2e;
+      --card:#231545;
+      --surface:#160d26;
+      --border:rgba(180,120,255,0.2);
+      --text:#ffffff;
+      --muted:#c4a8ff;
+      --error:#ff5252;
+      --warn:#ff9900;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+    /* NAV */
+    nav{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:60px;background:rgba(20,8,40,0.97);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+    .nav-logo{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;text-decoration:none;}
+    .nav-logo span{color:var(--primary);}
+    .nav-right{display:flex;align-items:center;gap:8px;}
+    .nav-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#cc5500);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;color:#000;font-size:.8rem;flex-shrink:0;}
+    .nav-name{font-size:.85rem;font-weight:600;color:#fff;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:.35rem .7rem;border-radius:50px;font-size:.75rem;cursor:pointer;white-space:nowrap;}
+    .logout-btn:hover{border-color:var(--error);color:var(--error);}
+
+    /* LOADING */
+    .loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:200;}
+    .spinner{width:40px;height:40px;border:3px solid rgba(160,80,255,0.25);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* MAIN CONTENT */
+    .main{flex:1;padding:20px 16px;max-width:700px;margin:0 auto;width:100%;}
+
+    /* WELCOME */
+    .welcome-row{margin-bottom:20px;}
+    .welcome-row h2{font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;}
+    .welcome-row p{color:var(--muted);font-size:.85rem;margin-top:4px;}
+    .ref-badge{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:.82rem;margin-top:10px;}
+    .ref-label{color:var(--muted);}
+    .ref-code{font-family:'Sora',sans-serif;font-weight:700;color:var(--primary);}
+    .copy-btn{background:rgba(255,122,32,0.15);border:none;color:var(--primary);padding:4px 10px;border-radius:6px;font-size:.72rem;cursor:pointer;font-weight:700;}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;}
+    .stat-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+    .stat-value{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:800;color:#fff;line-height:1;}
+    .stat-value.orange{color:var(--primary);}
+    .stat-sub{font-size:.7rem;color:var(--muted);margin-top:4px;}
+
+    /* SECTION */
+    .section{margin-bottom:24px;}
+    .section-title{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+    /* SURVEY ITEMS */
+    .survey-list{display:flex;flex-direction:column;gap:10px;}
+    .survey-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+    .survey-icon{width:38px;height:38px;border-radius:10px;background:rgba(160,80,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .survey-info{flex:1;min-width:0;}
+    .survey-name{font-weight:600;color:#fff;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .survey-meta{font-size:.72rem;color:var(--muted);margin-top:3px;}
+    .free-tag{background:rgba(160,80,255,0.2);color:#d4aaff;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;}
+    .paid-tag{background:rgba(255,153,0,0.15);color:var(--warn);font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;}
+    .take-btn{background:var(--primary);color:#000;border:none;padding:6px 14px;border-radius:50px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+    .pay-btn{background:transparent;color:var(--warn);border:1px solid var(--warn);padding:6px 12px;border-radius:50px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+    .done-badge{background:rgba(255,122,32,0.1);color:var(--primary);font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:50px;white-space:nowrap;flex-shrink:0;}
+
+    /* TRANSACTIONS */
+    .txn-list{display:flex;flex-direction:column;gap:8px;}
+    .txn-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+    .txn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .txn-dot.credit{background:var(--primary);}
+    .txn-dot.debit{background:var(--warn);}
+    .txn-info{flex:1;min-width:0;}
+    .txn-desc{font-size:.82rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .txn-date{font-size:.7rem;color:var(--muted);margin-top:2px;}
+    .txn-amount{font-family:'Sora',sans-serif;font-weight:700;font-size:.85rem;white-space:nowrap;flex-shrink:0;}
+    .txn-amount.credit{color:var(--primary);}
+    .txn-amount.debit{color:var(--warn);}
+    .empty-state{color:var(--muted);font-size:.85rem;text-align:center;padding:20px 0;}
+
+    /* CARD CONTAINER */
+    .card-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+
+    /* FORM INPUTS */
+    .form-input{width:100%;padding:12px 14px;border-radius:10px;background:rgba(180,120,255,0.08);border:1px solid var(--border);color:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;margin-bottom:12px;}
+    .form-input:focus{border-color:rgba(255,122,32,0.5);}
+    .form-input::placeholder{color:rgba(255,255,255,0.25);}
+    select.form-input option{background:#231545;color:#fff;}
+    .hint-text{font-size:.8rem;color:var(--muted);margin-bottom:12px;}
+    .hint-text span{color:var(--primary);font-weight:700;}
+    .action-btn{width:100%;padding:13px;border-radius:50px;background:var(--primary);color:#000;font-family:'Sora',sans-serif;font-weight:700;font-size:.95rem;border:none;cursor:pointer;}
+    .action-btn:hover{background:var(--primary-dark);}
+    .action-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+    /* REFERRAL */
+    .ref-link-row{display:flex;gap:8px;align-items:center;margin-top:10px;}
+    .ref-link-input{flex:1;padding:10px 12px;background:rgba(180,120,255,0.08);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:.78rem;outline:none;min-width:0;}
+    .ref-stats-row{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap;}
+    .ref-stat-val{font-family:'Sora',sans-serif;font-size:1.4rem;font-weight:800;color:#fff;}
+    .ref-stat-val span{color:var(--primary);}
+    .ref-stat-lbl{font-size:.72rem;color:var(--muted);margin-top:2px;}
+
+    /* MODAL OVERLAY */
+    .modal-overlay{position:fixed;inset:0;background:rgba(10,5,30,0.88);z-index:100;display:none;align-items:flex-end;justify-content:center;padding:0;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:20px 16px 32px;}
+    .modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px;}
+    .modal-title{font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800;color:#fff;}
+    .modal-meta{font-size:.78rem;color:var(--muted);margin-top:3px;}
+    .close-btn{background:rgba(255,255,255,0.08);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+    /* PROGRESS */
+    .progress-wrap{margin-bottom:16px;}
+    .progress-label{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:5px;}
+    .progress-bar-bg{background:rgba(180,120,255,0.15);border-radius:50px;height:5px;}
+    .progress-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--primary),#ffbb66);transition:width .4s ease;}
+
+    /* QUESTION */
+    .question-num{font-size:.72rem;color:var(--primary);font-weight:700;margin-bottom:5px;}
+    .question-text{font-size:.95rem;font-weight:600;color:#fff;margin-bottom:12px;line-height:1.5;}
+    .options-list{display:flex;flex-direction:column;gap:8px;}
+    .option-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;}
+    .option-item.selected{border-color:var(--primary);background:rgba(255,122,32,0.08);}
+    .option-item input[type=radio]{accent-color:var(--primary);width:15px;height:15px;flex-shrink:0;pointer-events:none;}
+    .option-label{font-size:.88rem;color:#fff;cursor:pointer;}
+    .text-answer{width:100%;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:#fff;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;resize:vertical;min-height:90px;}
+    .text-answer:focus{border-color:rgba(255,122,32,0.4);}
+    .text-answer::placeholder{color:rgba(255,255,255,0.2);}
+
+    /* MODAL FOOTER */
+    .modal-footer{display:flex;gap:10px;margin-top:16px;}
+    .btn-prev{flex:1;padding:12px;border-radius:50px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;}
+    .btn-next{flex:2;padding:12px;border-radius:50px;background:var(--primary);color:#000;font-family:'Sora',sans-serif;font-size:.88rem;font-weight:700;border:none;cursor:pointer;}
+    .btn-next:disabled{opacity:.5;cursor:not-allowed;}
+
+    /* SUCCESS */
+    .success-screen{text-align:center;padding:20px 0;}
+    .success-icon{font-size:3rem;margin-bottom:10px;}
+    .success-title{font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:5px;}
+    .success-earn{font-family:'Sora',sans-serif;font-size:2rem;font-weight:800;color:var(--primary);margin:10px 0;}
+    .success-sub{color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:16px;}
+    .done-btn{width:100%;padding:13px;border-radius:50px;background:var(--primary);color:#000;font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;border:none;cursor:pointer;}
+
+    /* PAYMENT MODAL */
+    .pay-modal-inner{background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 16px 36px;text-align:center;}
+    .pay-icon{font-size:2.5rem;margin-bottom:10px;}
+    .pay-title{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:5px;}
+    .pay-sub{color:var(--muted);font-size:.85rem;line-height:1.5;margin-bottom:12px;}
+    .pay-amount{font-family:'Sora',sans-serif;font-size:2rem;font-weight:800;color:var(--primary);margin-bottom:4px;}
+    .pay-earn{font-size:.78rem;color:var(--muted);margin-bottom:14px;}
+    .pay-input{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:#fff;font-family:'DM Sans',sans-serif;font-size:.92rem;outline:none;margin-bottom:12px;text-align:center;}
+    .pay-input:focus{border-color:rgba(255,122,32,0.4);}
+    .pay-input::placeholder{color:rgba(255,255,255,0.2);}
+    .stk-btn{width:100%;padding:13px;border-radius:50px;background:var(--primary);color:#000;font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;}
+    .stk-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .pay-cancel{background:none;border:none;color:var(--muted);font-size:.82rem;cursor:pointer;text-decoration:underline;}
+    .pay-status{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.82rem;display:none;text-align:left;}
+    .pay-status.pending{background:rgba(255,153,0,0.1);border:1px solid rgba(255,153,0,0.2);color:var(--warn);}
+    .pay-status.success{background:rgba(255,122,32,0.1);border:1px solid rgba(255,122,32,0.2);color:var(--primary);}
+    .pay-status.error{background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.2);color:var(--error);}
+    .pay-status.show{display:block;}
+
+    .momo-box{background:rgba(255,122,32,0.08);border:1px solid rgba(255,122,32,0.25);border-radius:14px;padding:14px;margin-bottom:14px;text-align:left;}
+    .momo-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .momo-row:last-of-type{border-bottom:none;}
+    .momo-label{font-size:.75rem;color:var(--muted);}
+    .momo-value{font-family:'Sora',sans-serif;font-weight:700;color:#fff;font-size:.92rem;}
+    .copy-momo-btn{width:100%;margin-top:10px;padding:8px;border-radius:8px;background:rgba(255,122,32,0.15);border:1px solid rgba(255,122,32,0.3);color:var(--primary);font-size:.78rem;font-weight:700;cursor:pointer;}
+    .pay-instructions{font-size:.78rem;color:var(--muted);line-height:1.6;margin-bottom:14px;text-align:left;}
+    .pay-instructions strong{color:#fff;}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d1560;border:1px solid rgba(255,122,32,0.3);color:var(--primary);padding:12px 20px;border-radius:50px;font-size:.88rem;font-weight:600;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap;z-index:999;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    /* BOTTOM NAV for mobile */
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(20,8,40,0.97);border-top:1px solid var(--border);padding:8px 0 12px;z-index:40;}
+    .bottom-nav-items{display:flex;justify-content:space-around;align-items:center;}
+    .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 10px;border-radius:8px;background:none;border:none;color:var(--muted);font-size:.6rem;font-weight:600;}
+    .bnav-item.active{color:var(--primary);}
+    .bnav-icon{font-size:1.1rem;}
+
+    @media(max-width:768px){
+      .bottom-nav{display:block;}
+      .main{padding:16px 12px 80px;}
+    }
+    @media(min-width:769px){
+      .main{padding:28px 24px;max-width:900px;}
+      .stats-grid{grid-template-columns:repeat(4,1fr);}
+      .two-col-desktop{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+      .modal{border-radius:20px;max-height:85vh;}
+      .modal-overlay{align-items:center;}
+      .pay-modal-inner{border-radius:20px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <p style="color:var(--muted);font-size:.9rem;">Loading dashboard…</p>
+</div>
+
+<!-- Survey Modal -->
+<div class="modal-overlay" id="surveyModal">
+  <div class="modal">
+    <div id="surveyContent">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-meta" id="modalMeta"></div>
+        </div>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="progressText">Question 1 of 5</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <div id="questionArea"></div>
+      <div class="modal-footer">
+        <button class="btn-prev" id="btnPrev" onclick="prevQuestion()">← Back</button>
+        <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+      </div>
+    </div>
+    <div class="success-screen" id="successScreen" style="display:none;">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">Survey Completed!</div>
+      <div class="success-earn" id="successEarn">+K0</div>
+      <p class="success-sub">Your earnings have been added to your balance!</p>
+      <button class="done-btn" onclick="closeModal()">Back to Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="payModal">
+  <div class="pay-modal-inner">
+    <div class="pay-icon">📱</div>
+    <div class="pay-title">Unlock This Survey</div>
+    <p class="pay-sub">Send the amount below via MTN Mobile Money to unlock this survey.</p>
+    <div class="pay-amount" id="payAmount">K50</div>
+    <p class="pay-earn" id="payEarn"></p>
+
+    <div class="momo-box">
+      <div class="momo-row">
+        <span class="momo-label">Send to MTN Number</span>
+        <span class="momo-value" id="momoNumber">096XXXXXXX</span>
+      </div>
+      <div class="momo-row">
+        <span class="momo-label">Receiver Name</span>
+        <span class="momo-value" id="momoName">SurveyPay Zambia</span>
+      </div>
+      <button class="copy-momo-btn" onclick="copyMomoNumber()">📋 Copy Number</button>
+    </div>
+
+    <p class="pay-instructions">After sending, enter the <strong>MTN transaction reference</strong> and your phone number below, then tap Confirm. Your survey will unlock once we verify the payment (usually within a few minutes).</p>
+
+    <input type="text" class="pay-input" id="momoRef" placeholder="MTN transaction reference e.g. MP240613.1234"/>
+    <input type="tel" class="pay-input" id="payPhone" placeholder="Your MTN number e.g. 0961234567"/>
+    <button class="stk-btn" id="stkBtn" onclick="submitMomoPayment()">✅ I've Sent the Money – Confirm</button>
+    <button class="pay-cancel" onclick="closePayModal()">Cancel</button>
+    <div class="pay-status" id="payStatus"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">Survey<span>Pay</span></a>
+  <div class="nav-right">
+    <div class="nav-avatar" id="navAvatar">?</div>
+    <span class="nav-name" id="navName">…</span>
+    <button class="logout-btn" onclick="handleLogout()">Sign out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- WELCOME -->
+  <div class="welcome-row" id="welcome-row">
+    <h2 id="welcomeMsg">Welcome back!</h2>
+    <p>Here's your earnings overview.</p>
+    <div class="ref-badge">
+      <span class="ref-label">Your code:</span>
+      <span class="ref-code" id="refCodeDisplay">––</span>
+      <button class="copy-btn" onclick="copyRefCode()">Copy</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">💰 Balance</div>
+      <div class="stat-value orange" id="statBalance">K0</div>
+      <div class="stat-sub">Available</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📈 Total Earned</div>
+      <div class="stat-value" id="statTotal">K0</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📋 Surveys</div>
+      <div class="stat-value" id="statSurveys">0</div>
+      <div class="stat-sub">Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">👥 Referrals</div>
+      <div class="stat-value" id="statRefs">0</div>
+      <div class="stat-sub" id="statRefEarnings">K0 earned</div>
+    </div>
+  </div>
+
+  <!-- SURVEYS + TRANSACTIONS (side by side on desktop, stacked on mobile) -->
+  <div class="two-col-desktop">
+    <div class="section" id="surveys">
+      <div class="section-title">📋 Available Surveys</div>
+      <div class="survey-list" id="surveyList"><div class="empty-state">Loading…</div></div>
+    </div>
+    <div class="section" id="transactions">
+      <div class="section-title">📊 Recent Transactions</div>
+      <div class="txn-list" id="txnList"><div class="empty-state">No transactions yet.</div></div>
+    </div>
+  </div>
+
+  <!-- WITHDRAW -->
+  <div class="section" id="withdraw">
+    <div class="section-title">💸 Withdraw Earnings</div>
+    <div class="card-box">
+      <p class="hint-text">Available: <span id="withdrawBalanceHint">K0</span></p>
+      <input type="number" class="form-input" id="withdrawAmount" placeholder="Amount (min. K3,000)" min="3000"/>
+      <select class="form-input" id="withdrawMethod">
+        <option value="">Select withdrawal method</option>
+        <option value="mpesa">📱 MTN Mobile Money</option>
+        <option value="airtel">💛 Airtel Money</option>
+        <option value="bank">🏦 Bank Transfer</option>
+      </select>
+      <input type="text" class="form-input" id="withdrawPhone" placeholder="MTN Mobile Money number or bank details"/>
+      <button class="action-btn" id="withdrawBtn" onclick="handleWithdraw()">Request Withdrawal</button>
+    </div>
+  </div>
+
+  <!-- REFERRALS -->
+  <div class="section" id="referrals">
+    <div class="section-title">👥 Refer & Earn</div>
+    <div class="card-box">
+      <p style="color:var(--muted);font-size:.88rem;line-height:1.6;">Earn <strong style="color:var(--primary)">K200</strong> for every friend who signs up and completes their first survey.</p>
+      <div class="ref-link-row">
+        <input class="ref-link-input" id="refLinkInput" readonly/>
+        <button class="copy-btn" style="padding:8px 14px;font-size:.8rem;" onclick="copyRefLink()">Copy</button>
+      </div>
+      <div class="ref-stats-row">
+        <div>
+          <div class="ref-stat-val" id="refCountDisplay">0</div>
+          <div class="ref-stat-lbl">Friends Referred</div>
+        </div>
+        <div>
+          <div class="ref-stat-val"><span>K</span><span id="refEarnedDisplay">0</span></div>
+          <div class="ref-stat-lbl">Referral Earnings</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+
+<!-- BOTTOM NAV (mobile only) -->
+<div class="bottom-nav">
+  <div class="bottom-nav-items">
+    <button class="bnav-item active" id='bnav-home' onclick="goToSection('welcome-row')"><span class="bnav-icon">🏠</span>Home</button>
+    <button class="bnav-item" id='bnav-surveys' onclick="goToSection('surveys')"><span class="bnav-icon">📋</span>Surveys</button>
+    <button class="bnav-item" id='bnav-withdraw' onclick="goToSection('withdraw')"><span class="bnav-icon">💸</span>Withdraw</button>
+    <button class="bnav-item" id='bnav-refer' onclick="goToSection('referrals')"><span class="bnav-icon">👥</span>Refer</button>
+    <button class="bnav-item" id='bnav-history' onclick="goToSection('transactions')"><span class="bnav-icon">📊</span>History</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var SURVEYS = [
+    {
+      id:'sv1', title:'Daily Consumer Habits', icon:'🛒', reward:200, mins:5, fee:0, isFree:true,
+      questions:[
+        {q:'How often do you shop for household items?', type:'radio', options:['Daily','Weekly','Bi-weekly','Monthly']},
+        {q:'Which store do you visit most?', type:'radio', options:['Shoprite','Pick n Pay','Melissa','Local market','Online']},
+        {q:'Average monthly spending on groceries?', type:'radio', options:['Below K2,000','K2,000–5,000','K5,000–10,000','Above K10,000']},
+        {q:'Do you compare prices before buying?', type:'radio', options:['Always','Sometimes','Rarely','Never']},
+        {q:'What influences your buying decisions the most?', type:'text'}
+      ]
+    },
+    {
+      id:'sv2', title:'Mobile Banking Usage', icon:'📱', reward:2500, mins:7, fee:199, isFree:false,
+      questions:[
+        {q:'Which mobile money service do you use most?', type:'radio', options:['MTN Mobile Money','Airtel Money','Zamtel Kwacha','None']},
+        {q:'How many times per week do you use mobile money?', type:'radio', options:['1–2 times','3–5 times','More than 5','Rarely']},
+        {q:'What do you mainly use it for?', type:'radio', options:['Sending money','Paying bills','Shopping','Saving','Receiving salary']},
+        {q:'Do you trust mobile banking for large transactions?', type:'radio', options:['Yes completely','Somewhat','Not really','No']},
+        {q:'What improvement would you suggest for mobile banking?', type:'text'}
+      ]
+    },
+    {
+      id:'sv3', title:'Food & Nutrition Study', icon:'🥗', reward:3560, mins:4, fee:290, isFree:false,
+      questions:[
+        {q:'How would you describe your diet?', type:'radio', options:['Mostly vegetables','Mixed (meat & veg)','Mostly meat','Fast food heavy']},
+        {q:'How many meals do you eat per day?', type:'radio', options:['1 meal','2 meals','3 meals','More than 3']},
+        {q:'Do you read food labels before buying?', type:'radio', options:['Always','Sometimes','Rarely','Never']},
+        {q:'What is your biggest nutritional concern?', type:'radio', options:['Getting enough protein','Reducing sugar','More vegetables','Cost of healthy food']},
+        {q:'Describe your ideal healthy meal:', type:'text'}
+      ]
+    },
+    {
+      id:'sv4', title:'Social Media Patterns', icon:'📲', reward:4430, mins:5, fee:389, isFree:false,
+      questions:[
+        {q:'Which social media platform do you use most?', type:'radio', options:['Facebook','Instagram','TikTok','Twitter/X','WhatsApp']},
+        {q:'Hours per day on social media?', type:'radio', options:['Less than 1 hr','1–2 hrs','3–4 hrs','More than 4 hrs']},
+        {q:'What do you mainly use social media for?', type:'radio', options:['Entertainment','News','Business','Connecting with friends','Learning']},
+        {q:'Has social media influenced your purchases?', type:'radio', options:['Yes, frequently','Occasionally','Rarely','Never']},
+        {q:'What content do you enjoy most on social media?', type:'text'}
+      ]
+    },
+    {
+      id:'sv5', title:'Transport & Commuting', icon:'🚌', reward:4970, mins:6, fee:450, isFree:false,
+      questions:[
+        {q:'Primary mode of transport?', type:'radio', options:['Minibus/Bus','Taxi','Private car','Walking','Motorbike']},
+        {q:'How long is your daily commute?', type:'radio', options:['Under 30 mins','30–60 mins','1–2 hours','Over 2 hours']},
+        {q:'Daily transport spending?', type:'radio', options:['Under K100','K100–300','K300–500','Over K500']},
+        {q:'Satisfied with public transport in your area?', type:'radio', options:['Very satisfied','Somewhat satisfied','Dissatisfied','Very dissatisfied']},
+        {q:'What would most improve public transport in Zambia?', type:'text'}
+      ]
+    },
+    {
+      id:'sv6', title:'Health & Wellness', icon:'💪', reward:5780, mins:8, fee:570, isFree:false,
+      questions:[
+        {q:'How often do you exercise?', type:'radio', options:['Daily','3–4 times/week','1–2 times/week','Rarely','Never']},
+        {q:'How would you rate your overall health?', type:'radio', options:['Excellent','Good','Fair','Poor']},
+        {q:'Do you have access to affordable healthcare?', type:'radio', options:['Yes, easily','Somewhat','Difficult','No access']},
+        {q:'Do you have health insurance?', type:'radio', options:['Yes, NHIMA','Yes, private','Both','No insurance']},
+        {q:'What is your biggest health challenge right now?', type:'text'}
+      ]
+    }
+  ];
+
+  var currentUser=null, userData=null, currentSurvey=null;
+  var currentQIndex=0, answers={}, pendingSurveyId=null;
+
+  function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3500);}
+  function fmt(n){return Number(n).toLocaleString();}
+  function getSurveyById(id){for(var i=0;i<SURVEYS.length;i++){if(SURVEYS[i].id===id)return SURVEYS[i];}return null;}
+  function goToSection(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var navH=64;
+    var top=el.getBoundingClientRect().top+window.pageYOffset-navH;
+    window.scrollTo({top:top,behavior:'smooth'});
+    document.querySelectorAll('.bnav-item').forEach(function(b){b.classList.remove('active');});
+  }
+
+  auth.onAuthStateChanged(function(user){
+    if(!user){window.location.href='login.html';return;}
+    currentUser=user;
+    loadDashboard(user);
+  });
+
+  function loadDashboard(user){
+    db.collection('users').doc(user.uid).get().then(function(snap){
+      if(!snap.exists){window.location.href='login.html';return;}
+      userData=snap.data();
+      var initials=userData.fullName.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+      document.getElementById('navAvatar').textContent=initials;
+      document.getElementById('navName').textContent=userData.fullName.split(' ')[0];
+      document.getElementById('welcomeMsg').textContent='Welcome back, '+userData.fullName.split(' ')[0]+'! 👋';
+      document.getElementById('refCodeDisplay').textContent=userData.referralCode;
+      document.getElementById('statBalance').textContent='K'+fmt(userData.balance);
+      document.getElementById('statTotal').textContent='K'+fmt(userData.totalEarned);
+      document.getElementById('statSurveys').textContent=userData.surveysCompleted;
+      document.getElementById('statRefs').textContent=userData.referralCount;
+      document.getElementById('statRefEarnings').textContent='K'+fmt(userData.totalReferralEarnings)+' earned';
+      document.getElementById('withdrawBalanceHint').textContent='K'+fmt(userData.balance);
+      document.getElementById('refLinkInput').value=window.location.origin+'/signup.html?ref='+userData.referralCode;
+      document.getElementById('refCountDisplay').textContent=userData.referralCount;
+      document.getElementById('refEarnedDisplay').textContent=userData.totalReferralEarnings;
+      loadSurveys(user.uid);
+      loadTransactions(user.uid);
+      document.getElementById('loadingScreen').style.display='none';
+    });
+  }
+
+  function loadSurveys(uid){
+    checkApprovedPayments(uid);
+    db.collection('users').doc(uid).collection('completedSurveys').get().then(function(doneSnap){
+      var done={};doneSnap.forEach(function(d){done[d.id]=true;});
+      db.collection('users').doc(uid).collection('unlockedSurveys').get().then(function(unlockedSnap){
+        var unlocked={};unlockedSnap.forEach(function(d){unlocked[d.id]=true;});
+        db.collection('users').doc(uid).collection('pendingPayments').get().then(function(pendingSnap){
+          var pending={};pendingSnap.forEach(function(d){pending[d.id]=true;});
+          var html=SURVEYS.map(function(s){
+            var btn='';
+            if(done[s.id]){btn='<span class="done-badge">✓ Done</span>';}
+            else if(s.isFree||unlocked[s.id]){btn='<button class="take-btn" onclick="openSurvey(\''+s.id+'\')">Start</button>';}
+            else if(pending[s.id]){btn='<span class="done-badge" style="color:var(--warn);background:rgba(255,153,0,0.12);">⏳ Pending</span>';}
+            else{btn='<button class="pay-btn" onclick="openPayModal(\''+s.id+'\')">🔒 K'+s.fee+'</button>';}
+            return '<div class="survey-item">'+
+              '<div class="survey-icon">'+s.icon+'</div>'+
+              '<div class="survey-info">'+
+                '<div class="survey-name">'+s.title+(s.isFree?'<span class="free-tag">FREE</span>':'<span class="paid-tag">PAID</span>')+'</div>'+
+                '<div class="survey-meta">~'+s.mins+' mins &nbsp;·&nbsp; Earn K'+fmt(s.reward)+'</div>'+
+              '</div>'+btn+
+            '</div>';
+          }).join('');
+          document.getElementById('surveyList').innerHTML=html;
+        });
+      });
+    });
+  }
+
+  function openSurvey(id){
+    currentSurvey=getSurveyById(id);if(!currentSurvey)return;
+    currentQIndex=0;answers={};
+    document.getElementById('modalTitle').textContent=currentSurvey.title;
+    document.getElementById('modalMeta').textContent='~'+currentSurvey.mins+' mins  ·  Earn K'+fmt(currentSurvey.reward);
+    document.getElementById('surveyContent').style.display='';
+    document.getElementById('successScreen').style.display='none';
+    renderQuestion();
+    document.getElementById('surveyModal').classList.add('open');
+  }
+
+  function renderQuestion(){
+    var q=currentSurvey.questions[currentQIndex];
+    var total=currentSurvey.questions.length;
+    var pct=Math.round((currentQIndex/total)*100);
+    document.getElementById('progressText').textContent='Question '+(currentQIndex+1)+' of '+total;
+    document.getElementById('progressPct').textContent=pct+'%';
+    document.getElementById('progressFill').style.width=pct+'%';
+    document.getElementById('btnPrev').style.visibility=currentQIndex===0?'hidden':'visible';
+    document.getElementById('btnNext').textContent=currentQIndex===total-1?'Submit ✓':'Next →';
+    var saved=answers[currentQIndex];
+    var html='<div class="question-num">Question '+(currentQIndex+1)+' of '+total+'</div>'+
+      '<div class="question-text">'+q.q+'</div>';
+    if(q.type==='radio'){
+      html+='<div class="options-list">';
+      q.options.forEach(function(opt){
+        var sel=saved===opt?' selected':'';
+        var esc=opt.replace(/'/g,"\\'");
+        html+='<label class="option-item'+sel+'" onclick="selectOption(this,\''+esc+'\')">'+
+          '<input type="radio" name="q'+currentQIndex+'" '+(saved===opt?'checked':'')+' readonly/>'+
+          '<span class="option-label">'+opt+'</span></label>';
+      });
+      html+='</div>';
+    }else{
+      html+='<textarea class="text-answer" id="textAnswer" placeholder="Type your answer here…">'+(saved||'')+'</textarea>';
+    }
+    document.getElementById('questionArea').innerHTML=html;
+  }
+
+  function selectOption(el,value){
+    document.querySelectorAll('.option-item').forEach(function(o){o.classList.remove('selected');});
+    el.classList.add('selected');answers[currentQIndex]=value;
+  }
+
+  function nextQuestion(){
+    var q=currentSurvey.questions[currentQIndex];
+    if(q.type==='text'){var ta=document.getElementById('textAnswer');if(!ta||!ta.value.trim()){showToast('⚠️ Please write an answer.');return;}answers[currentQIndex]=ta.value.trim();}
+    if(q.type==='radio'&&!answers[currentQIndex]){showToast('⚠️ Please select an answer.');return;}
+    if(currentQIndex<currentSurvey.questions.length-1){currentQIndex++;renderQuestion();}
+    else{submitSurvey();}
+  }
+
+  function prevQuestion(){if(currentQIndex>0){currentQIndex--;renderQuestion();}}
+
+  function submitSurvey(){
+    var uid=currentUser.uid;var s=currentSurvey;
+    var btn=document.getElementById('btnNext');btn.disabled=true;btn.textContent='Submitting…';
+    db.collection('users').doc(uid).collection('completedSurveys').doc(s.id).set({
+      surveyId:s.id,title:s.title,reward:s.reward,answers:answers,
+      completedAt:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      return db.collection('users').doc(uid).update({
+        balance:firebase.firestore.FieldValue.increment(s.reward),
+        totalEarned:firebase.firestore.FieldValue.increment(s.reward),
+        surveysCompleted:firebase.firestore.FieldValue.increment(1)
+      });
+    }).then(function(){
+      return db.collection('users').doc(uid).collection('transactions').add({
+        type:'survey_earning',amount:s.reward,
+        description:'Survey completed: '+s.title,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function(){
+      document.getElementById('successEarn').textContent='+K'+fmt(s.reward);
+      document.getElementById('surveyContent').style.display='none';
+      document.getElementById('successScreen').style.display='';
+      loadDashboard(currentUser);
+    }).catch(function(){btn.disabled=false;btn.textContent='Submit ✓';showToast('❌ Error. Please try again.');});
+  }
+
+  function closeModal(){
+    document.getElementById('surveyModal').classList.remove('open');
+    currentSurvey=null;answers={};currentQIndex=0;
+    if(currentUser)loadSurveys(currentUser.uid);
+  }
+
+  // ── MTN MoMo placeholder details — UPDATE THESE ──
+  var MOMO_NUMBER = '096XXXXXXX';        // ← replace with your real MTN MoMo number
+  var MOMO_NAME   = 'SurveyPay Zambia';  // ← replace with the receiver name
+
+  function openPayModal(id){
+    pendingSurveyId=id;var s=getSurveyById(id);
+    document.getElementById('payAmount').textContent='K'+s.fee;
+    document.getElementById('payEarn').textContent='You\'ll earn K'+fmt(s.reward)+' after completing it';
+    document.getElementById('payPhone').value=userData.phone||'';
+    document.getElementById('momoNumber').textContent=MOMO_NUMBER;
+    document.getElementById('momoName').textContent=MOMO_NAME;
+    document.getElementById('momoRef').value='';
+    document.getElementById('payStatus').className='pay-status';
+    document.getElementById('stkBtn').disabled=false;
+    document.getElementById('stkBtn').textContent='✅ I\'ve Sent the Money – Confirm';
+    document.getElementById('payModal').classList.add('open');
+  }
+
+  function closePayModal(){
+    document.getElementById('payModal').classList.remove('open');
+    pendingSurveyId=null;
+  }
+
+  function copyMomoNumber(){
+    navigator.clipboard.writeText(MOMO_NUMBER);
+    showToast('✅ Number copied!');
+  }
+
+  function submitMomoPayment(){
+    var phone=document.getElementById('payPhone').value.trim();
+    var ref=document.getElementById('momoRef').value.trim();
+    var s=getSurveyById(pendingSurveyId);
+    if(!phone||phone.length<9){showToast('⚠️ Enter a valid MTN number');return;}
+    if(!ref){showToast('⚠️ Enter the MTN transaction reference');return;}
+
+    var btn=document.getElementById('stkBtn');
+    btn.disabled=true;btn.textContent='Submitting…';
+    setPayStatus('pending','⏳ Submitting your payment for review…');
+
+    var uid=currentUser.uid;
+    db.collection('users').doc(uid).collection('pendingPayments').doc(s.id).set({
+      surveyId:s.id, surveyTitle:s.title, amount:s.fee,
+      phone:phone, momoReference:ref,
+      status:'pending',
+      submittedAt:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      return db.collection('pendingPayments').add({
+        uid:uid, fullName:userData.fullName, email:userData.email,
+        surveyId:s.id, surveyTitle:s.title, amount:s.fee,
+        phone:phone, momoReference:ref,
+        status:'pending',
+        submittedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function(){
+      setPayStatus('success','✅ Submitted! Your survey will unlock once we verify the payment — usually within a few minutes. You can check back on this survey shortly.');
+      btn.textContent='✓ Submitted for Review';
+      setTimeout(function(){ closePayModal(); loadSurveys(currentUser.uid); }, 2500);
+    }).catch(function(){
+      setPayStatus('error','❌ Submission failed. Please try again.');
+      btn.disabled=false;btn.textContent='✅ I\'ve Sent the Money – Confirm';
+    });
+  }
+
+  // Check if a pending payment has since been approved (called when survey list loads)
+  function checkApprovedPayments(uid){
+    db.collection('users').doc(uid).collection('pendingPayments').where('status','==','approved').get()
+    .then(function(snap){
+      snap.forEach(function(doc){
+        var p=doc.data();
+        db.collection('users').doc(uid).collection('unlockedSurveys').doc(p.surveyId).set({
+          surveyId:p.surveyId, amountPaid:p.amount,
+          unlockedAt:firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function(){
+          return db.collection('users').doc(uid).collection('transactions').add({
+            type:'survey_unlock', amount:p.amount,
+            description:'Unlocked survey: '+p.surveyTitle,
+            createdAt:firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }).then(function(){
+          return doc.ref.delete();
+        }).then(function(){
+          loadSurveys(uid);
+        });
+      });
+    });
+  }
+
+  function setPayStatus(type,msg){var el=document.getElementById('payStatus');el.className='pay-status '+type+' show';el.textContent=msg;}
+
+  function loadTransactions(uid){
+    db.collection('users').doc(uid).collection('transactions').orderBy('createdAt','desc').limit(10).get()
+    .then(function(snap){
+      if(snap.empty){document.getElementById('txnList').innerHTML='<div class="empty-state">No transactions yet.</div>';return;}
+      var html='';
+      snap.forEach(function(d){
+        var t=d.data();
+        var isCredit=t.type==='survey_earning'||t.type==='welcome_bonus'||t.type==='referral_bonus';
+        var date=t.createdAt&&t.createdAt.toDate?t.createdAt.toDate().toLocaleDateString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Just now';
+        html+='<div class="txn-item"><div class="txn-dot '+(isCredit?'credit':'debit')+'"></div>'+
+          '<div class="txn-info"><div class="txn-desc">'+t.description+'</div><div class="txn-date">'+date+'</div></div>'+
+          '<div class="txn-amount '+(isCredit?'credit':'debit')+'">'+(isCredit?'+':'-')+'K'+fmt(t.amount)+'</div></div>';
+      });
+      document.getElementById('txnList').innerHTML=html;
+    });
+  }
+
+  function handleWithdraw(){
+    var amount=parseInt(document.getElementById('withdrawAmount').value);
+    var method=document.getElementById('withdrawMethod').value;
+    var phone=document.getElementById('withdrawPhone').value.trim();
+    if(!amount||amount<3000){showToast('⚠️ Minimum withdrawal is K3,000');return;}
+    if(!method){showToast('⚠️ Select a withdrawal method');return;}
+    if(!phone){showToast('⚠️ Enter your payment details');return;}
+    if(amount>userData.balance){showToast('⚠️ Insufficient balance. You have K'+fmt(userData.balance));return;}
+    var btn=document.getElementById('withdrawBtn');btn.disabled=true;btn.textContent='Processing…';
+    var uid=currentUser.uid;
+    db.collection('users').doc(uid).update({balance:firebase.firestore.FieldValue.increment(-amount),totalWithdrawn:firebase.firestore.FieldValue.increment(amount)})
+    .then(function(){return db.collection('users').doc(uid).collection('transactions').add({type:'withdrawal',amount:amount,description:'Withdrawal via '+method.toUpperCase()+' to '+phone,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});})
+    .then(function(){return db.collection('withdrawals').add({uid:uid,fullName:userData.fullName,email:userData.email,phone:userData.phone,amount:amount,method:method,paymentDetails:phone,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});})
+    .then(function(){showToast('✅ Withdrawal of K'+fmt(amount)+' submitted!');document.getElementById('withdrawAmount').value='';document.getElementById('withdrawPhone').value='';document.getElementById('withdrawMethod').value='';loadDashboard(currentUser);})
+    .catch(function(){showToast('❌ Withdrawal failed. Please try again.');})
+    .finally(function(){btn.disabled=false;btn.textContent='Request Withdrawal';});
+  }
+
+  function copyRefCode(){navigator.clipboard.writeText(userData.referralCode);showToast('✅ Code copied!');}
+  function copyRefLink(){navigator.clipboard.writeText(document.getElementById('refLinkInput').value);showToast('✅ Link copied!');}
+  function handleLogout(){auth.signOut().then(function(){window.location.href='login.html';});}
+
+  document.getElementById('surveyModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+  document.getElementById('payModal').addEventListener('click',function(e){if(e.target===this)closePayModal();});
+</script>
+</body>
+</html>

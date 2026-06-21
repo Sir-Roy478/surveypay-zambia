@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SurveyPay Zambia – Answer Surveys & Earn Cash</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #ff7a20;
+      --primary-dark: #e05500;
+      --primary-glow: rgba(160,80,255,0.25);
+      --dark: #1a0a2e;
+      --card: #231545;
+      --border: rgba(180,120,255,0.2);
+      --text:#f0e8ff;
+      --muted: #7a9abe;
+      --white:#ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background:linear-gradient(135deg,#1a0a2e 0%,#2d1060 50%,#1a0a2e 100%);
+      color: #f0e8ff;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; height: 64px;
+      background: rgba(20,8,40,0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem; font-weight: 800;
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--primary); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.9rem; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-cta {
+      background: var(--primary); color: #000;
+      padding: .5rem 1.3rem; border-radius: 50px;
+      font-weight: 700; font-size: .9rem;
+      text-decoration: none; transition: background .2s, transform .15s;
+    }
+    .nav-cta:hover { background: var(--primary-dark); transform: scale(1.04); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { width: 24px; height: 2px; background: #ffffff; border-radius: 2px; transition: all .3s; }
+    .mobile-menu {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: #1a0a2e; border-bottom: 1px solid var(--border);
+      flex-direction: column; padding: 1.5rem 5%; gap: 1.2rem; z-index: 99;
+    }
+    .mobile-menu a { color: #f0e8ff; text-decoration: none; font-size: 1rem; font-weight: 500; }
+    .mobile-menu.open { display: flex; }
+
+    /* ── HERO ── */
+    #home {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 5% 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(160,80,255,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(0,119,255,0.1); border: 1px solid rgba(160,80,255,0.3);
+      color: var(--primary); font-size: .8rem; font-weight: 600;
+      padding: .4rem 1rem; border-radius: 50px; margin-bottom: 1.5rem;
+      animation: fadeUp .6s ease both;
+    }
+    .badge::before { content: "●"; font-size: .5rem; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    h1 {
+      color:#ffffff;
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800; line-height: 1.1;
+      color: #ffffff; max-width: 750px;
+      animation: fadeUp .7s .1s ease both;
+    }
+    h1 .accent { color: var(--primary); }
+    .hero-sub {
+      margin-top: 1.2rem; color: var(--muted);
+      font-size: 1.05rem; max-width: 480px; line-height: 1.7;
+      animation: fadeUp .7s .2s ease both;
+    }
+    .hero-steps {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem;
+      margin-top: 2rem;
+      animation: fadeUp .7s .3s ease both;
+    }
+    .hero-step {
+      display: flex; align-items: center; gap: .5rem;
+      background: var(--card); border: 1px solid var(--border);
+      padding: .5rem 1rem; border-radius: 50px;
+      font-size: .85rem; color: var(--muted);
+    }
+    .hero-step .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+    .hero-btns {
+      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+      margin-top: 2.5rem;
+      animation: fadeUp .7s .4s ease both;
+    }
+    .btn-primary {
+      background: var(--primary); color: #000;
+      padding: .85rem 2rem; border-radius: 50px;
+      font-weight: 700; font-size: 1rem;
+      text-decoration: none; transition: all .2s;
+      box-shadow: 0 0 30px rgba(160,80,255,0.38);
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 0 40px rgba(160,80,255,0.48); }
+    .btn-secondary {
+      background: transparent; color: #f0e8ff;
+      padding: .85rem 2rem; border-radius: 50px;
+      font-weight: 600; font-size: 1rem;
+      text-decoration: none; border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
+    .hero-stats {
+      display: flex; gap: 2.5rem; flex-wrap: wrap; justify-content: center;
+      margin-top: 3.5rem;
+      animation: fadeUp .7s .5s ease both;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.8rem; font-weight: 800; color: #ffffff;
+    }
+    .stat-num span { color: var(--primary); }
+    .stat-label { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+
+    /* ── HOW IT WORKS ── */
+    section { padding: 90px 5%; }
+    .section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+      color: var(--primary); text-transform: uppercase; margin-bottom: .6rem;
+    }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800; color: #ffffff; line-height: 1.2;
+    }
+    .section-sub { color: var(--muted); font-size: 1rem; margin-top: .8rem; max-width: 460px; line-height: 1.7; }
+
+    #how-it-works { background: #1a0a2e; }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .step-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem;
+      transition: border-color .2s, transform .2s;
+      position: relative; overflow: hidden;
+    }
+    .step-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+    .step-card:hover { border-color: rgba(160,80,255,0.38); transform: translateY(-4px); }
+    .step-card:hover::before { opacity: 1; }
+    .step-num {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.5rem; font-weight: 800;
+      color: rgba(160,80,255,0.22); margin-bottom: .8rem;
+      line-height: 1;
+    }
+    .step-icon {
+      font-size: 2rem; margin-bottom: 1rem;
+    }
+    .step-card h3 {
+      color:#ffffff;
+      font-family: 'Sora', sans-serif;
+      font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: .6rem;
+    }
+    .step-card p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+    /* ── EARNINGS ── */
+    #earnings { background:linear-gradient(135deg,#1a0a2e 0%,#2d1060 50%,#1a0a2e 100%); }
+    .earnings-wrap {
+      display: flex; gap: 4rem; align-items: center; flex-wrap: wrap; margin-top: 2.5rem;
+    }
+    .earnings-left { flex: 1; min-width: 260px; }
+    .earnings-right { flex: 1; min-width: 260px; }
+    .earn-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1.2rem 0; border-bottom: 1px solid var(--border);
+    }
+    .earn-item:last-child { border-bottom: none; }
+    .earn-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--primary-glow); display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .earn-item h4 { font-weight: 600; color: #ffffff; font-size: .95rem; }
+    .earn-item p { color: var(--muted); font-size: .85rem; margin-top: .2rem; line-height: 1.5; }
+
+    .payout-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .payout-card::after {
+      content: ''; position: absolute; bottom: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(0,119,255,0.1), transparent 70%);
+    }
+    .payout-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .payout-title { font-family: 'Sora', sans-serif; font-weight: 700; color: #ffffff; }
+    .payout-badge {
+      background: rgba(0,119,255,0.1); color: var(--primary);
+      font-size: .75rem; font-weight: 700; padding: .3rem .8rem; border-radius: 50px;
+    }
+    .payout-amount {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.8rem; font-weight: 800; color: #ffffff; margin-bottom: .3rem;
+    }
+    .payout-amount span { color: var(--primary); font-size: 1.8rem; }
+    .payout-sub { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; }
+    .payout-bar-wrap { background: rgba(180,120,255,0.12); border-radius: 50px; height: 8px; margin-bottom: .5rem; }
+    .payout-bar { width: 72%; height: 100%; border-radius: 50px; background: linear-gradient(90deg, var(--primary), #ffbb66); }
+    .payout-bar-label { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
+    .payout-methods { display: flex; gap: .6rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .method-chip {
+      background: rgba(180,120,255,0.12); border: 1px solid var(--border);
+      color: #f0e8ff; font-size: .8rem; padding: .35rem .8rem; border-radius: 50px;
+    }
+
+    /* ── TESTIMONIALS ── */
+    #testimonials { background: #1a0a2e; }
+    .testi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .testi-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.8rem;
+      transition: border-color .2s;
+    }
+    .testi-card:hover { border-color: rgba(160,80,255,0.3); }
+    .stars { color: var(--primary); font-size: 1rem; margin-bottom: .8rem; letter-spacing: .1em; }
+    .testi-card p { color: var(--muted); font-size: .92rem; line-height: 1.7; margin-bottom: 1.2rem; }
+    .testi-author { display: flex; align-items: center; gap: .8rem; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #cc5500);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Sora', sans-serif; font-weight: 700; color: #000; font-size: .9rem;
+    }
+    .author-name { font-weight: 600; color: #ffffff; font-size: .9rem; }
+    .author-loc { font-size: .78rem; color: var(--muted); }
+
+    /* ── NOTIFICATIONS ── */
+    #notifications { background:linear-gradient(135deg,#1a0a2e 0%,#2d1060 50%,#1a0a2e 100%); }
+    .notif-feed {
+      margin-top: 2.5rem; max-width: 560px;
+      display: flex; flex-direction: column; gap: .8rem;
+    }
+    .notif-item {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.2rem;
+      animation: slideIn .4s ease both;
+      transition: border-color .2s;
+    }
+    .notif-item:hover { border-color: rgba(160,80,255,0.25); }
+    @keyframes slideIn { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:none} }
+    .notif-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--primary); flex-shrink: 0;
+      box-shadow: 0 0 8px var(--primary);
+    }
+    .notif-text { flex: 1; }
+    .notif-name { font-weight: 600; color: #ffffff; font-size: .9rem; }
+    .notif-msg { color: var(--muted); font-size: .82rem; margin-top: .1rem; }
+    .notif-time { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+
+    /* ── CTA SECTION ── */
+    #cta {
+      background: linear-gradient(135deg, #080f28 0%, #1a0a2e 100%);
+      border-top: 1px solid rgba(0,119,255,0.1);
+      border-bottom: 1px solid rgba(0,119,255,0.1);
+      text-align: center; padding: 90px 5%;
+    }
+    #cta h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800; color:#ffffff; max-width: 600px; margin: 0 auto 1rem;
+    }
+    #cta p { color: var(--muted); max-width: 420px; margin: 0 auto 2rem; line-height: 1.7; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #1a0a2e; border-top: 1px solid var(--border);
+      padding: 2rem 5%; text-align: center;
+      color: var(--muted); font-size: .85rem;
+    }
+    footer .footer-logo { font-family: 'Sora', sans-serif; font-weight: 800; color: #ffffff; font-size: 1.1rem; margin-bottom: .5rem; }
+    footer .footer-logo span { color: var(--primary); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none} }
+
+    @media (max-width: 680px) {
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      .hero-stats { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Survey<span>Pay</span></a>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#how-it-works">How it Works</a></li>
+    <li><a href="#testimonials">Testimonials</a></li>
+    <li><a href="#notifications">Notifications</a></li>
+  </ul>
+  <a class="nav-cta" href="signup.html">Get Started</a>
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#home" onclick="toggleMenu()">Home</a>
+  <a href="#how-it-works" onclick="toggleMenu()">How it Works</a>
+  <a href="#testimonials" onclick="toggleMenu()">Testimonials</a>
+  <a href="#notifications" onclick="toggleMenu()">Notifications</a>
+  <a href="signup.html" style="color:var(--primary);font-weight:700;">Get Started →</a>
+</div>
+
+<!-- HERO -->
+<section id="home">
+  <div class="hero-glow"></div>
+  <div class="badge">🟢 Paying out daily to members</div>
+  <h1>Answer Surveys &amp;<br/><span class="accent">Earn Real Cash</span></h1>
+  <p class="hero-sub">Share your opinion in minutes and get paid instantly via MTN Mobile Money or bank transfer. Join thousands already earning daily.</p>
+  <div class="hero-steps">
+    <div class="hero-step"><span class="dot"></span> Free to join</div>
+    <div class="hero-step"><span class="dot"></span> Instant MTN Mobile Money payouts</div>
+    <div class="hero-step"><span class="dot"></span> Referral bonuses</div>
+  </div>
+  <div class="hero-btns">
+    <a href="signup.html" class="btn-primary">Start Earning Now →</a>
+    <a href="#how-it-works" class="btn-secondary">See How it Works</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">12<span>K+</span></div><div class="stat-label">Active Members</div></div>
+    <div class="stat"><div class="stat-num">K<span>2M+</span></div><div class="stat-label">Paid Out</div></div>
+    <div class="stat"><div class="stat-num">4.8<span>★</span></div><div class="stat-label">User Rating</div></div>
+    <div class="stat"><div class="stat-num">98<span>%</span></div><div class="stat-label">Satisfaction</div></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="section-label">Simple Process</div>
+  <div class="section-title">How to Earn in 3 Easy Steps</div>
+  <p class="section-sub">Get started in under 2 minutes. No experience needed.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon">👤</div>
+      <h3>Sign Up Free</h3>
+      <p>Create your free account in under 2 minutes. No credit card required. Just your name and email to get started.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon">📋</div>
+      <h3>Answer Surveys</h3>
+      <p>Browse available surveys and share your honest opinions. Each completed survey adds cash directly to your account balance.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon">💸</div>
+      <h3>Withdraw Cash</h3>
+      <p>Request a payout anytime. Funds are sent instantly to your MTN Mobile Money or bank account — no delays, no hidden fees.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-icon">🤝</div>
+      <h3>Refer &amp; Earn More</h3>
+      <p>Invite friends using your unique referral link and earn a bonus for every person who joins and completes their first survey.</p>
+    </div>
+  </div>
+</section>
+
+<!-- EARNINGS -->
+<section id="earnings">
+  <div class="section-label">Your Earnings</div>
+  <div class="section-title">Multiple Ways to Earn</div>
+  <div class="earnings-wrap">
+    <div class="earnings-left">
+      <div class="earn-item">
+        <div class="earn-icon">📝</div>
+        <div>
+          <h4>Survey Completion</h4>
+          <p>Earn K50 – 500 per survey depending on length and complexity. New surveys added daily.</p>
+        </div>
+      </div>
+      <div class="earn-item">
+        <div class="earn-icon">👥</div>
+        <div>
+          <h4>Referral Bonus</h4>
+          <p>Earn K200 for every friend you refer who completes their first survey. No limit on referrals.</p>
+        </div>
+      </div>
+      <div class="earn-item">
+        <div class="earn-icon">🏆</div>
+        <div>
+          <h4>Weekly Challenges</h4>
+          <p>Complete bonus challenges each week to unlock extra earnings and climb the leaderboard.</p>
+        </div>
+      </div>
+      <div class="earn-item">
+        <div class="earn-icon">🎁</div>
+        <div>
+          <h4>Sign-Up Bonus</h4>
+          <p>Get K100 instantly just for creating your free account — no conditions attached.</p>
+        </div>
+      </div>
+    </div>
+    <div class="earnings-right">
+      <div class="payout-card">
+        <div class="payout-header">
+          <div class="payout-title">This Month's Earnings</div>
+          <div class="payout-badge">+24% vs last month</div>
+        </div>
+        <div class="payout-amount"><span>K</span>3,850</div>
+        <div class="payout-sub">From 18 completed surveys + 4 referrals</div>
+        <div class="payout-bar-wrap"><div class="payout-bar"></div></div>
+        <div class="payout-bar-label"><span>K0</span><span>Goal: K5,000</span></div>
+        <div style="margin-top:1.2rem;">
+          <div style="font-size:.8rem;color:#c4a8ff;margin-bottom:.6rem;">Withdraw via</div>
+          <div class="payout-methods">
+            <span class="method-chip">📱 MTN Mobile Money</span>
+            <span class="method-chip">🏦 Bank Transfer</span>
+            <span class="method-chip">💳 Airtel Money Zambia</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="section-label">What People Say</div>
+  <div class="section-title">Happy Members</div>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <p>"SurveyPay Zambia is the real deal. I made K2,500 in my first week just from completing surveys in my free time. Withdrawals hit MTN Mobile Money in seconds!"</p>
+      <div class="testi-author">
+        <div class="avatar">JK</div>
+        <div><div class="author-name">Jane K.</div><div class="author-loc">Lusaka, Zambia</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <p>"Fast payouts, simple interface. I referred 6 friends last month and earned an extra K1,200 in bonuses alone. Absolutely love this platform!"</p>
+      <div class="testi-author">
+        <div class="avatar">DM</div>
+        <div><div class="author-name">David M.</div><div class="author-loc">Ndola, Zambia</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <p>"I was skeptical at first but it genuinely works. The surveys are short and worth it. I do them during lunch break and have earned over K8,000 total."</p>
+      <div class="testi-author">
+        <div class="avatar">GL</div>
+        <div><div class="author-name">Grace L.</div><div class="author-loc">Kitwe, Zambia</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <p>"Best survey site I've used. Payments are instant and there are always new surveys available. The referral program is a great bonus on top."</p>
+      <div class="testi-author">
+        <div class="avatar">BW</div>
+        <div><div class="author-name">Brian W.</div><div class="author-loc">Kabwe, Zambia</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <p>"I use SurveyPay Zambia every morning before work. It takes only 10 minutes and I consistently earn K150–300 a day. This adds up to real money!"</p>
+      <div class="testi-author">
+        <div class="avatar">AN</div>
+        <div><div class="author-name">Amina N.</div><div class="author-loc">Chingola, Zambia</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <p>"Customer support is responsive and the platform never has downtime. I've recommended SurveyPay Zambia to my whole family. We all benefit together."</p>
+      <div class="testi-author">
+        <div class="avatar">PO</div>
+        <div><div class="author-name">Peter O.</div><div class="author-loc">Livingstone, Zambia</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NOTIFICATIONS -->
+<section id="notifications">
+  <div class="section-label">Live Activity</div>
+  <div class="section-title">Recent Withdrawals</div>
+  <p class="section-sub">Watch real-time payouts being sent to members right now.</p>
+  <div class="notif-feed" id="notifFeed">
+    <!-- populated by JS -->
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <h2>Ready to Start Earning?</h2>
+  <p>Join thousands of members already earning from home. Sign up free and get your K100 welcome bonus today.</p>
+  <a href="signup.html" class="btn-primary" style="font-size:1.1rem;padding:1rem 2.5rem;">Create Free Account →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Survey<span>Pay</span></div>
+  <p style="margin-top:.4rem;">© 2026 SurveyPay Zambia. All rights reserved.</p>
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  }
+
+  const notifData = [
+    { name: "James K.", msg: "Withdrawal of K2,500 has been disbursed", time: "Just now" },
+    { name: "Mary N.", msg: "Withdrawal of K3,000 has been disbursed", time: "2 mins ago" },
+    { name: "Paul O.", msg: "Withdrawal of K1,500 has been disbursed", time: "4 mins ago" },
+    { name: "Faith M.", msg: "Withdrawal of K800 has been disbursed", time: "7 mins ago" },
+    { name: "Samuel T.", msg: "Withdrawal of K4,200 has been disbursed", time: "11 mins ago" },
+    { name: "Lily A.", msg: "Withdrawal of K1,100 has been disbursed", time: "15 mins ago" },
+    { name: "Kevin R.", msg: "Withdrawal of K2,000 has been disbursed", time: "19 mins ago" },
+  ];
+
+  function renderNotifs(items) {
+    const feed = document.getElementById('notifFeed');
+    feed.innerHTML = items.map((n, i) => `
+      <div class="notif-item" style="animation-delay:${i * 0.08}s">
+        <div class="notif-dot"></div>
+        <div class="notif-text">
+          <div class="notif-name">${n.name}</div>
+          <div class="notif-msg">${n.msg}</div>
+        </div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    `).join('');
+  }
+
+  renderNotifs(notifData);
+
+  // Auto-cycle notifications
+  let idx = 0;
+  setInterval(() => {
+    idx = (idx + 1) % notifData.length;
+    const rotated = [...notifData.slice(idx), ...notifData.slice(0, idx)];
+    renderNotifs(rotated);
+  }, 3500);
+</script>
+</body>
+</html>
