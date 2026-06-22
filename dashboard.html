@@ -183,7 +183,7 @@
     .pay-instructions strong{color:#fff;}
 
     /* TOAST */
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d1560;border:1px solid rgba(255,122,32,0.3);color:var(--primary);padding:12px 20px;border-radius:50px;font-size:.88rem;font-weight:600;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap;z-index:999;}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d1560;border:1px solid rgba(255,122,32,0.3);color:var(--primary);padding:12px 18px;border-radius:16px;font-size:.85rem;font-weight:600;line-height:1.4;opacity:0;transition:all .35s;pointer-events:none;white-space:normal;z-index:999;max-width:90vw;width:max-content;text-align:center;}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
     /* BOTTOM NAV for mobile */
@@ -664,7 +664,7 @@
     var s=getSurveyById(pendingSurveyId);
     if(!phone||phone.length<9){showToast('⚠️ Enter a valid phone number');return;}
     if(!ref){showToast('⚠️ Enter the transaction reference');return;}
-    if(!isValidMomoReference(ref)){showToast('⚠️ That doesn\'t look like a valid transaction reference. Check your mobile money confirmation SMS and enter the exact code.');return;}
+    if(!isValidMomoReference(ref)){showToast('⚠️ Invalid reference. Check your SMS and enter the exact code.');return;}
 
     var btn=document.getElementById('stkBtn');
     btn.disabled=true;btn.textContent='Submitting…';
