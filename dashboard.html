@@ -273,6 +273,7 @@
     <p class="pay-instructions">After sending, enter the <strong>transaction reference</strong> from your mobile money confirmation message, plus the phone number you sent from. Tap Confirm. Your survey will unlock once we verify the payment (usually within a few minutes).</p>
 
     <input type="text" class="pay-input" id="momoRef" placeholder="Transaction reference e.g. MP240613.1234"/>
+    <p style="font-size:.72rem;color:var(--muted);margin:-6px 0 12px;text-align:left;">Find this code in the confirmation SMS from your mobile money provider — it's a mix of letters and numbers, not your phone number.</p>
     <input type="tel" class="pay-input" id="payPhone" placeholder="The number you sent money from"/>
     <button class="stk-btn" id="stkBtn" onclick="submitMomoPayment()">✅ I've Sent the Money – Confirm</button>
     <button class="pay-cancel" onclick="closePayModal()">Cancel</button>
@@ -618,8 +619,8 @@
   }
 
   // ── MTN MoMo placeholder details — UPDATE THESE ──
-  var MOMO_NUMBER = '0765865433';        // ← replace with your real MTN MoMo number
-  var MOMO_NAME   = 'Fides Muzyamba';  // ← replace with the receiver name
+  var MOMO_NUMBER = '096XXXXXXX';        // ← replace with your real MTN MoMo number
+  var MOMO_NAME   = 'SurveyPay Zambia';  // ← replace with the receiver name
 
   function openPayModal(id){
     pendingSurveyId=id;var s=getSurveyById(id);
@@ -645,12 +646,25 @@
     showToast('✅ Number copied!');
   }
 
+  function isValidMomoReference(ref){
+    // Real mobile money references are alphanumeric, 8-15 characters,
+    // and contain at least one letter and one number (never pure digits like "123").
+    var cleaned = ref.replace(/[\s.\-]/g, ''); // allow dots/dashes/spaces in what user typed
+    if(cleaned.length < 8 || cleaned.length > 15) return false;
+    if(!/^[A-Za-z0-9]+$/.test(cleaned)) return false;       // only letters/numbers
+    if(!/[A-Za-z]/.test(cleaned)) return false;             // must contain a letter
+    if(!/[0-9]/.test(cleaned)) return false;                // must contain a number
+    if(/^0+$/.test(cleaned)) return false;                  // reject all zeros
+    return true;
+  }
+
   function submitMomoPayment(){
     var phone=document.getElementById('payPhone').value.trim();
     var ref=document.getElementById('momoRef').value.trim();
     var s=getSurveyById(pendingSurveyId);
     if(!phone||phone.length<9){showToast('⚠️ Enter a valid phone number');return;}
     if(!ref){showToast('⚠️ Enter the transaction reference');return;}
+    if(!isValidMomoReference(ref)){showToast('⚠️ That doesn\'t look like a valid transaction reference. Check your mobile money confirmation SMS and enter the exact code.');return;}
 
     var btn=document.getElementById('stkBtn');
     btn.disabled=true;btn.textContent='Submitting…';
