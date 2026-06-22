@@ -337,7 +337,10 @@
       .hamburger { display: flex; }
       .hero-stats { gap: 1.5rem; }
     }
-  </style>
+  </style>  <!-- Firebase SDKs (for install tracking) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
 </head>
 <body>
 
@@ -606,7 +609,7 @@
     });
   }
 
-  // ── PWA Install Prompt ──
+  // ── PWA Install Prompt + Tracking ──
   var deferredInstallPrompt = null;
   window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();
@@ -619,6 +622,8 @@
     if (!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
     deferredInstallPrompt.userChoice.then(function(choice) {
+      // choice.outcome is 'accepted' or 'dismissed'
+      logInstallEvent(choice.outcome === 'accepted' ? 'prompt_accepted' : 'prompt_dismissed');
       deferredInstallPrompt = null;
       var btn = document.getElementById('installBtn');
       if (btn) btn.style.display = 'none';
@@ -626,9 +631,35 @@
   }
 
   window.addEventListener('appinstalled', function() {
+    logInstallEvent('installed');
     var btn = document.getElementById('installBtn');
     if (btn) btn.style.display = 'none';
   });
+
+  function logInstallEvent(eventType) {
+    try {
+      db.collection('installEvents').add({
+        event: eventType,
+        platform: navigator.userAgent,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.log('Could not log install event', e);
+    }
+  }
+
+  // Detect if already running as an installed app (for stats on return visits)
+  function isRunningStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone === true;
+  }
+  if (isRunningStandalone()) {
+    var alreadyLogged = sessionStorage.getItem('standaloneLogged');
+    if (!alreadyLogged) {
+      logInstallEvent('standalone_session');
+      sessionStorage.setItem('standaloneLogged', '1');
+    }
+  }
 </script>
 </body>
 </html>
