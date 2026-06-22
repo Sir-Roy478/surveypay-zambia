@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SurveyPay Zambia – Answer Surveys & Earn Cash</title>
+  
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#1a0a2e"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="SurveyPay"/>
+<title>SurveyPay Zambia – Answer Surveys & Earn Cash</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -342,6 +350,7 @@
     <li><a href="#testimonials">Testimonials</a></li>
     <li><a href="#notifications">Notifications</a></li>
   </ul>
+  <button id="installBtn" class="nav-cta" style="display:none;background:transparent;border:1.5px solid var(--primary);color:var(--primary);margin-right:.6rem;cursor:pointer;" onclick="triggerInstall()">📲 Install App</button>
   <a class="nav-cta" href="signup.html">Get Started</a>
   <div class="hamburger" onclick="toggleMenu()">
     <span></span><span></span><span></span>
@@ -586,6 +595,40 @@
     const rotated = [...notifData.slice(idx), ...notifData.slice(0, idx)];
     renderNotifs(rotated);
   }, 3500);
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js').catch(function(err){
+        console.log('Service worker registration failed:', err);
+      });
+    });
+  }
+
+  // ── PWA Install Prompt ──
+  var deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    var btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'inline-block';
+  });
+
+  function triggerInstall() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(choice) {
+      deferredInstallPrompt = null;
+      var btn = document.getElementById('installBtn');
+      if (btn) btn.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('appinstalled', function() {
+    var btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  });
 </script>
 </body>
 </html>
