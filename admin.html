@@ -233,6 +233,12 @@
     renderPayments();
   }
 
+  function looksLikeReferralCode(ref){
+    if(!ref) return false;
+    var cleaned = ref.replace(/[\s.\-]/g,'');
+    return /^[A-Za-z]{4}\d{4}$/.test(cleaned);
+  }
+
   function renderInstalls(){
     var list=document.getElementById('paymentsList');
     var relevant = allInstalls.filter(function(i){
@@ -293,7 +299,7 @@
         '<div class="payment-details">'+
           '<div class="detail-box"><div class="detail-label">Survey</div><div class="detail-value">'+(p.surveyTitle||p.surveyId)+'</div></div>'+
           '<div class="detail-box"><div class="detail-label">MTN Number</div><div class="detail-value">'+(p.phone||'-')+'</div></div>'+
-          '<div class="detail-box"><div class="detail-label">Transaction Ref</div><div class="detail-value">'+(p.momoReference||'-')+'</div></div>'+
+          '<div class="detail-box"><div class="detail-label">Transaction Ref</div><div class="detail-value">'+(p.momoReference||'-')+(looksLikeReferralCode(p.momoReference)?' <span style="color:#ff5252;font-size:.7rem;">⚠️ looks like a referral code</span>':'')+'</div></div>'+
           '<div class="detail-box"><div class="detail-label">Submitted</div><div class="detail-value">'+date+'</div></div>'+
         '</div>'+
         actionButtons+
