@@ -113,12 +113,14 @@
       <div class="stat-pill"><b id="countPending">0</b>Pending</div>
       <div class="stat-pill"><b id="countApproved">0</b>Approved</div>
       <div class="stat-pill"><b id="countRejected">0</b>Rejected</div>
+      <div class="stat-pill"><b id="countInstalls">0</b>App Installs</div>
     </div>
 
     <div class="tabs">
       <button class="tab active" id="tabPending" onclick="switchTab('pending')">⏳ Pending</button>
       <button class="tab" id="tabApproved" onclick="switchTab('approved')">✅ Approved</button>
       <button class="tab" id="tabRejected" onclick="switchTab('rejected')">❌ Rejected</button>
+      <button class="tab" id="tabInstalls" onclick="switchTab('installs')">📲 Installs</button>
     </div>
 
     <div id="paymentsList"><div class="loading">Loading payments…</div></div>
@@ -173,6 +175,8 @@
   });
 
   // ── LOAD PAYMENTS ──
+  var allInstalls = [];
+
   function loadPayments(){
     document.getElementById('paymentsList').innerHTML='<div class="loading">Loading payments…</div>';
     db.collection('pendingPayments').orderBy('submittedAt','desc').get()
@@ -188,6 +192,28 @@
     })
     .catch(function(err){
       document.getElementById('paymentsList').innerHTML='<div class="empty-state">Error loading payments: '+err.message+'</div>';
+    });
+
+    loadInstalls();
+  }
+
+  function loadInstalls(){
+    db.collection('installEvents').orderBy('timestamp','desc').limit(200).get()
+    .then(function(snap){
+      allInstalls=[];
+      snap.forEach(function(doc){
+        var data=doc.data();
+        data._id=doc.id;
+        allInstalls.push(data);
+      });
+      var trueInstalls = allInstalls.filter(function(i){
+        return i.event==='installed' || i.event==='prompt_accepted';
+      }).length;
+      document.getElementById('countInstalls').textContent=trueInstalls;
+      if(currentTab==='installs') renderPayments();
+    })
+    .catch(function(err){
+      console.log('Could not load install events:', err.message);
     });
   }
 
@@ -207,7 +233,38 @@
     renderPayments();
   }
 
+  function renderInstalls(){
+    var list=document.getElementById('paymentsList');
+    var relevant = allInstalls.filter(function(i){
+      return i.event==='installed' || i.event==='prompt_accepted';
+    });
+
+    if(relevant.length===0){
+      list.innerHTML='<div class="empty-state">No installs recorded yet.</div>';
+      return;
+    }
+
+    list.innerHTML=relevant.map(function(i){
+      var date=i.timestamp&&i.timestamp.toDate?i.timestamp.toDate().toLocaleString('en-ZM',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Unknown';
+      var deviceGuess='Unknown device';
+      var ua=i.platform||'';
+      if(/android/i.test(ua)) deviceGuess='Android';
+      else if(/iphone|ipad/i.test(ua)) deviceGuess='iPhone/iPad';
+      else if(/windows/i.test(ua)) deviceGuess='Windows';
+      else if(/mac/i.test(ua)) deviceGuess='Mac';
+
+      return '<div class="payment-card">'+
+        '<div class="payment-top">'+
+          '<div><div class="payment-name">📲 '+deviceGuess+'</div>'+
+          '<div class="payment-email">'+date+'</div></div>'+
+          '<span class="status-badge approved">'+(i.event==='installed'?'Installed':'Accepted Prompt')+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
   function renderPayments(){
+    if(currentTab==='installs'){ renderInstalls(); return; }
     var filtered=allPayments.filter(function(p){return p.status===currentTab;});
     var list=document.getElementById('paymentsList');
 
