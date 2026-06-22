@@ -353,7 +353,6 @@
     <li><a href="#testimonials">Testimonials</a></li>
     <li><a href="#notifications">Notifications</a></li>
   </ul>
-  <button id="installBtn" class="nav-cta" style="display:none;background:transparent;border:1.5px solid var(--primary);color:var(--primary);margin-right:.6rem;cursor:pointer;" onclick="triggerInstall()">📲 Install App</button>
   <a class="nav-cta" href="signup.html">Get Started</a>
   <div class="hamburger" onclick="toggleMenu()">
     <span></span><span></span><span></span>
@@ -608,58 +607,7 @@
       });
     });
   }
-
-  // ── PWA Install Prompt + Tracking ──
-  var deferredInstallPrompt = null;
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    var btn = document.getElementById('installBtn');
-    if (btn) btn.style.display = 'inline-block';
-  });
-
-  function triggerInstall() {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.then(function(choice) {
-      // choice.outcome is 'accepted' or 'dismissed'
-      logInstallEvent(choice.outcome === 'accepted' ? 'prompt_accepted' : 'prompt_dismissed');
-      deferredInstallPrompt = null;
-      var btn = document.getElementById('installBtn');
-      if (btn) btn.style.display = 'none';
-    });
-  }
-
-  window.addEventListener('appinstalled', function() {
-    logInstallEvent('installed');
-    var btn = document.getElementById('installBtn');
-    if (btn) btn.style.display = 'none';
-  });
-
-  function logInstallEvent(eventType) {
-    try {
-      db.collection('installEvents').add({
-        event: eventType,
-        platform: navigator.userAgent,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    } catch (e) {
-      console.log('Could not log install event', e);
-    }
-  }
-
-  // Detect if already running as an installed app (for stats on return visits)
-  function isRunningStandalone() {
-    return window.matchMedia('(display-mode: standalone)').matches ||
-           window.navigator.standalone === true;
-  }
-  if (isRunningStandalone()) {
-    var alreadyLogged = sessionStorage.getItem('standaloneLogged');
-    if (!alreadyLogged) {
-      logInstallEvent('standalone_session');
-      sessionStorage.setItem('standaloneLogged', '1');
-    }
-  }
 </script>
+<script src="install-prompt.js"></script>
 </body>
 </html>
