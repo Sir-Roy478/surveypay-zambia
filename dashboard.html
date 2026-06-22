@@ -416,7 +416,7 @@
       ]
     },
     {
-      id:'sv2', title:'Mobile Banking Usage', icon:'📱', reward:2500, mins:7, fee:99, isFree:false,
+      id:'sv2', title:'Mobile Banking Usage', icon:'📱', reward:2500, mins:7, fee:199, isFree:false,
       questions:[
         {q:'Which mobile money service do you use most?', type:'radio', options:['MTN Mobile Money','Airtel Money','Zamtel Kwacha','None']},
         {q:'How many times per week do you use mobile money?', type:'radio', options:['1–2 times','3–5 times','More than 5','Rarely']},
@@ -426,7 +426,7 @@
       ]
     },
     {
-      id:'sv3', title:'Food & Nutrition Study', icon:'🥗', reward:3560, mins:4, fee:190, isFree:false,
+      id:'sv3', title:'Food & Nutrition Study', icon:'🥗', reward:3560, mins:4, fee:290, isFree:false,
       questions:[
         {q:'How would you describe your diet?', type:'radio', options:['Mostly vegetables','Mixed (meat & veg)','Mostly meat','Fast food heavy']},
         {q:'How many meals do you eat per day?', type:'radio', options:['1 meal','2 meals','3 meals','More than 3']},
@@ -436,7 +436,7 @@
       ]
     },
     {
-      id:'sv4', title:'Social Media Patterns', icon:'📲', reward:4430, mins:5, fee:289, isFree:false,
+      id:'sv4', title:'Social Media Patterns', icon:'📲', reward:4430, mins:5, fee:389, isFree:false,
       questions:[
         {q:'Which social media platform do you use most?', type:'radio', options:['Facebook','Instagram','TikTok','Twitter/X','WhatsApp']},
         {q:'Hours per day on social media?', type:'radio', options:['Less than 1 hr','1–2 hrs','3–4 hrs','More than 4 hrs']},
@@ -446,7 +446,7 @@
       ]
     },
     {
-      id:'sv5', title:'Transport & Commuting', icon:'🚌', reward:4970, mins:6, fee:350, isFree:false,
+      id:'sv5', title:'Transport & Commuting', icon:'🚌', reward:4970, mins:6, fee:450, isFree:false,
       questions:[
         {q:'Primary mode of transport?', type:'radio', options:['Minibus/Bus','Taxi','Private car','Walking','Motorbike']},
         {q:'How long is your daily commute?', type:'radio', options:['Under 30 mins','30–60 mins','1–2 hours','Over 2 hours']},
@@ -456,7 +456,7 @@
       ]
     },
     {
-      id:'sv6', title:'Health & Wellness', icon:'💪', reward:5780, mins:8, fee:470, isFree:false,
+      id:'sv6', title:'Health & Wellness', icon:'💪', reward:5780, mins:8, fee:570, isFree:false,
       questions:[
         {q:'How often do you exercise?', type:'radio', options:['Daily','3–4 times/week','1–2 times/week','Rarely','Never']},
         {q:'How would you rate your overall health?', type:'radio', options:['Excellent','Good','Fair','Poor']},
@@ -627,8 +627,8 @@
   }
 
   // ── MTN MoMo placeholder details — UPDATE THESE ──
-  var MOMO_NUMBER = '0765865433';        // ← replace with your real MTN MoMo number
-  var MOMO_NAME   = 'Fides Muzyamba';  // ← replace with the receiver name
+  var MOMO_NUMBER = '096XXXXXXX';        // ← replace with your real MTN MoMo number
+  var MOMO_NAME   = 'SurveyPay Zambia';  // ← replace with the receiver name
 
   function openPayModal(id){
     pendingSurveyId=id;var s=getSurveyById(id);
@@ -663,7 +663,19 @@
     if(!/[A-Za-z]/.test(cleaned)) return false;             // must contain a letter
     if(!/[0-9]/.test(cleaned)) return false;                // must contain a number
     if(/^0+$/.test(cleaned)) return false;                  // reject all zeros
+
+    // Reject referral-code shape: exactly 4 letters followed by exactly 4 digits
+    // (this is the exact pattern genCode() produces on signup, e.g. GUGE3475)
+    if(/^[A-Za-z]{4}\d{4}$/.test(cleaned)) return false;
+
     return true;
+  }
+
+  // Extra async check: reject if this exact string matches a real referral code in the database
+  function isReferralCode(code){
+    return db.collection('users').where('referralCode','==',code.toUpperCase()).limit(1).get()
+      .then(function(snap){ return !snap.empty; })
+      .catch(function(){ return false; });
   }
 
   function submitMomoPayment(){
@@ -675,7 +687,21 @@
     if(!isValidMomoReference(ref)){showToast('⚠️ Invalid reference. Check your SMS and enter the exact code.');return;}
 
     var btn=document.getElementById('stkBtn');
-    btn.disabled=true;btn.textContent='Submitting…';
+    btn.disabled=true;btn.textContent='Checking…';
+    setPayStatus('pending','⏳ Verifying details…');
+
+    isReferralCode(ref).then(function(isRefCode){
+      if(isRefCode){
+        btn.disabled=false;btn.textContent='✅ I\'ve Sent the Money – Confirm';
+        setPayStatus('error','⚠️ That looks like a referral code, not a payment reference. Please check your mobile money SMS for the correct transaction code.');
+        return;
+      }
+      proceedWithSubmission(phone, ref, s, btn);
+    });
+  }
+
+  function proceedWithSubmission(phone, ref, s, btn){
+    btn.textContent='Submitting…';
     setPayStatus('pending','⏳ Submitting your payment for review…');
 
     var uid=currentUser.uid;
